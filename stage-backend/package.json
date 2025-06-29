@@ -1,5 +1,5 @@
 {
-  "name": "api",
+  "name": "stage-backend",
   "version": "1.0.0",
   "description": "Simple video management API for Stage app",
   "main": "index.js",
