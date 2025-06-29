@@ -59,8 +59,10 @@ export interface Video {
 }
 
 export const dbOps = {
-  add: (v: { key: string, url: string, title: string, description?: string }) => run('INSERT INTO videos (key,url,title,description) VALUES (?,?,?,?)', [v.key, v.url, v.title, v.description]),
-  all: () => all('SELECT * FROM videos ORDER BY createdAt DESC'),
+  add: (v: { key: string, title: string, description?: string }) => run(
+    'INSERT INTO videos (key,title,description) VALUES (?,?,?)',
+    [v.key, v.title, v.description]),
+  all: () => all('SELECT * FROM videos ORDER BY created_at DESC'),
   one: (id: number) => get('SELECT * FROM videos WHERE id=?', [id]),
   del: (id: number) => run('DELETE FROM videos WHERE id=?', [id])
 }
