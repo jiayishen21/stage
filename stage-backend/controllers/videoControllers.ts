@@ -8,8 +8,9 @@ const bucket = process.env.S3_BUCKET_NAME!
 export const upload: RequestHandler = async (req, res) => {
   const { title, description } = req.body
   if (!title) { res.status(400).json({ error: 'Title required' }); return }
-  const key = `videos/${crypto.randomUUID()}.mp4`
-  const url = await s3.getSignedUrlPromise("putObject", { Bucket: bucket, Key: key, ContentType: "video/mp4", Expires: 60 })
+  const key = crypto.randomUUID()
+  // const url = await s3.getSignedUrlPromise("putObject", { Bucket: bucket, Key: key, ContentType: "video/mp4", Expires: 60 })
+  const url = 'lol'
   await dbOps.add({ key, title, description })
   res.json({ url, key })
 }

@@ -60,7 +60,7 @@ export interface Video {
 
 export const dbOps = {
   add: (v: { key: string, title: string, description?: string }) => run(
-    'INSERT INTO videos (key,title,description) VALUES (?,?,?)',
+    'INSERT INTO videos (key,title,description) VALUES ($1,$2,$3)',
     [v.key, v.title, v.description]),
   all: () => all('SELECT * FROM videos ORDER BY created_at DESC'),
   one: (id: number) => get('SELECT * FROM videos WHERE id=?', [id]),
