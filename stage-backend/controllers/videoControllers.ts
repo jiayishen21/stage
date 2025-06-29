@@ -20,6 +20,7 @@ export const all: RequestHandler = async (_req, res) => {
 }
 
 export const one: RequestHandler = async (req, res) => {
+  console.log("DEBUG", req.params.id)
   const v = await dbOps.one(Number(req.params.id))
   if (v) res.json(v)
   else res.status(404).json({ error: 'Not found' })

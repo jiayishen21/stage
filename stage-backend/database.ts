@@ -63,8 +63,8 @@ export const dbOps = {
     'INSERT INTO videos (key,title,description) VALUES ($1,$2,$3)',
     [v.key, v.title, v.description]),
   all: () => all('SELECT * FROM videos ORDER BY created_at DESC'),
-  one: (id: number) => get('SELECT * FROM videos WHERE id=?', [id]),
-  del: (id: number) => run('DELETE FROM videos WHERE id=?', [id])
+  one: (id: number) => get('SELECT * FROM videos WHERE id=$1', [id]),
+  del: (id: number) => run('DELETE FROM videos WHERE id=$1', [id])
 }
 
 export default pool
