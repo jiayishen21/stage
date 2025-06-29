@@ -1,4 +1,4 @@
 .vercel
-api/.env
-api/.env.production
+stage-backend/.env
+stage-backend/.env.production
 node_modules
