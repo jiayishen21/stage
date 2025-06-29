@@ -1,90 +1,68 @@
-import sqlite3 from 'sqlite3'
+import { Pool } from 'pg'
 
-// Create database connection
-const db = new sqlite3.Database('./stage.db')
+// Supabase connection config for serverless
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  port: parseInt(process.env.DB_PORT || '5432'),
+  // Required for Supabase
+  ssl: {
+    rejectUnauthorized: false
+  },
+  // Serverless-optimized settings
+  // Only 1 connection per function instance
+  max: 1,
+  // Close idle connections after 30 seconds
+  idleTimeoutMillis: 30000,
+  // Close connections that are idle for 5 seconds
+  connectionTimeoutMillis: 5000,
+})
 
-const run = (sql: string, params: any[] = []): Promise<{ lastID: number; changes: number }> => {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function(err) {
-      if (err) {
-        reject(err)
-      } else {
-        resolve({ lastID: this.lastID, changes: this.changes })
-      }
-    })
-  })
-}
-
-const get = (sql: string, params: any[] = []): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(row)
-      }
-    })
-  })
-}
-
-const all = (sql: string, params: any[] = []): Promise<any[]> => {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(rows || [])
-      }
-    })
-  })
-}
-
-// Init database tables
-export const initDatabase = async (): Promise<void> => {
+const run = async (sql: string, params: any[] = []): Promise<{ lastID: number; changes: number }> => {
+  const client = await pool.connect()
   try {
-    await run(`
-      CREATE TABLE IF NOT EXISTS videos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        key TEXT,
-        url TEXT,
-        title TEXT,
-        description TEXT,
-        uploadedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `)
-    console.log('Database initialized successfully')
-  } catch (error) {
-    console.error('Failed to initialize database:', error)
-    throw error
+    const result = await client.query(sql, params)
+    return { lastID: result.rows[0]?.id || 0, changes: result.rowCount || 0 }
+  } finally {
+    client.release()
+  }
+}
+
+const get = async (sql: string, params: any[] = []): Promise<any> => {
+  const client = await pool.connect()
+  try {
+    const result = await client.query(sql, params)
+    return result.rows[0] || null
+  } finally {
+    client.release()
+  }
+}
+
+const all = async (sql: string, params: any[] = []): Promise<any[]> => {
+  const client = await pool.connect()
+  try {
+    const result = await client.query(sql, params)
+    return result.rows || []
+  } finally {
+    client.release()
   }
 }
 
 export interface Video {
   id: number
+  created_at: string
   key: string
-  url: string
   title: string
   description?: string
-  uploadedAt: string
 }
 
 export const dbOps = {
-  add: (v: {key:string,url:string,title:string,description?:string}) => run('INSERT INTO videos (key,url,title,description) VALUES (?,?,?,?)',[v.key,v.url,v.title,v.description]),
-  all: () => all('SELECT * FROM videos ORDER BY uploadedAt DESC'),
-  one: (id:number) => get('SELECT * FROM videos WHERE id=?',[id]),
-  del: (id:number) => run('DELETE FROM videos WHERE id=?',[id])
+  add: (v: { key: string, url: string, title: string, description?: string }) => run('INSERT INTO videos (key,url,title,description) VALUES (?,?,?,?)', [v.key, v.url, v.title, v.description]),
+  all: () => all('SELECT * FROM videos ORDER BY createdAt DESC'),
+  one: (id: number) => get('SELECT * FROM videos WHERE id=?', [id]),
+  del: (id: number) => run('DELETE FROM videos WHERE id=?', [id])
 }
 
-// Close DB on exit
-process.on('SIGINT', () => {
-  db.close((err) => {
-    if (err) {
-      console.error('Error closing database:', err)
-    } else {
-      console.log('Database connection closed')
-    }
-    process.exit(0)
-  })
-})
-
-export default db 
+export default pool

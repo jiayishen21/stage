@@ -4,13 +4,9 @@ dotenv.config()
 import express from "express"
 import cors from "cors"
 import router from "./routes/index"
-import { initDatabase } from "./database"
 
 const app = express()
 const port = process.env.PORT || 3000
-
-// Init database
-initDatabase().catch(console.error)
 
 app.use(cors())
 app.use(express.json())
