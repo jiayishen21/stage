@@ -1,5 +1,4 @@
 import { RequestHandler } from "express"
-import s3 from "../utils/s3"
 import { dbOps } from "../database"
 import crypto from "crypto"
 
@@ -9,10 +8,8 @@ export const upload: RequestHandler = async (req, res) => {
   const { title, description } = req.body
   if (!title) { res.status(400).json({ error: 'Title required' }); return }
   const key = crypto.randomUUID()
-  // const url = await s3.getSignedUrlPromise("putObject", { Bucket: bucket, Key: key, ContentType: "video/mp4", Expires: 60 })
-  const url = 'lol'
-  await dbOps.add({ key, title, description })
-  res.json({ url, key })
+  const { lastID, changes } = await dbOps.add({ key, title, description })
+  res.json({ id: lastID, changes })
 }
 
 export const all: RequestHandler = async (_req, res) => {
